@@ -3,316 +3,252 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Prototype IFC → Plan 2D</title>
-  <link rel="icon" href="data:," />
+  <title>IFC Viewer - Plan 2D prototype</title>
+  <link rel="icon" href="data:,">
   <style>
-    :root{
-      --bg:#0f172a; --panel:#111827; --card:#1f2937; --text:#f9fafb; --muted:#9ca3af;
-      --accent:#38bdf8; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
-    }
+    :root{--bg:#0f172a;--panel:#111827;--muted:#94a3b8;--txt:#e5e7eb;--acc:#38bdf8;--ok:#22c55e;--err:#ef4444}
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
-    .app{height:100vh;display:grid;grid-template-columns:340px 1fr;}
-    aside{background:var(--panel);border-right:1px solid rgba(255,255,255,.08);padding:18px;overflow:auto;}
-    main{position:relative;min-width:0;}
-    #container{position:absolute;inset:0;}
-    h1{font-size:20px;margin:0 0 6px;}
-    .sub{color:var(--muted);font-size:13px;line-height:1.4;margin-bottom:16px;}
-    .box{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin:12px 0;}
-    label{display:block;font-weight:700;font-size:13px;margin-bottom:8px;}
-    input,select,button{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.14);padding:10px 12px;background:#0b1220;color:var(--text);font-size:14px;}
-    input[type=file]{padding:9px;}
-    button{cursor:pointer;background:#0ea5e9;border-color:#0ea5e9;color:white;font-weight:800;margin-top:8px;}
-    button.secondary{background:#111827;border-color:rgba(255,255,255,.18);}
-    button:disabled{opacity:.45;cursor:not-allowed;}
-    .status{font-size:13px;line-height:1.45;color:var(--muted);white-space:pre-wrap;}
-    .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--danger)}
-    .levels{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;}
-    .level{padding:8px 10px;border-radius:10px;background:#0b1220;border:1px solid rgba(255,255,255,.08);font-size:13px;}
-    .badge{display:inline-block;padding:2px 7px;border-radius:999px;background:rgba(56,189,248,.16);color:#7dd3fc;font-size:12px;margin-left:6px;}
-    .topbar{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:3;}
-    .topbar button{width:auto;margin:0;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);}
-    @media(max-width:850px){
-      .app{grid-template-columns:1fr;grid-template-rows:auto 1fr;}
-      aside{max-height:48vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
-      main{height:52vh;}
-    }
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:grid;grid-template-rows:auto 1fr}
+    header{padding:12px 14px;background:#020617;border-bottom:1px solid #1e293b;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    h1{font-size:16px;margin:0 10px 0 0;font-weight:700}
+    button,label.file{border:0;border-radius:10px;background:#1e293b;color:var(--txt);padding:9px 12px;cursor:pointer;font-size:13px}
+    button:hover,label.file:hover{background:#334155}
+    button.primary,label.file.primary{background:var(--acc);color:#00111a;font-weight:700}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    input[type=file]{display:none}
+    main{display:grid;grid-template-columns:320px 1fr;min-height:0}
+    aside{background:var(--panel);border-right:1px solid #1e293b;padding:12px;overflow:auto}
+    #container{position:relative;min-height:0}
+    #viewer{position:absolute;inset:0}
+    .card{background:#0b1220;border:1px solid #1e293b;border-radius:14px;padding:12px;margin-bottom:10px}
+    .small{font-size:12px;color:var(--muted);line-height:1.45}
+    .status{font-size:12px;white-space:pre-wrap;background:#020617;border:1px solid #1e293b;border-radius:10px;padding:10px;color:#cbd5e1;max-height:220px;overflow:auto}
+    .list button{display:block;width:100%;text-align:left;margin:6px 0;background:#172033}
+    .badge{display:inline-block;border-radius:999px;padding:2px 8px;background:#1e293b;color:#cbd5e1;font-size:11px;margin-left:6px}
+    @media(max-width:800px){main{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh;border-right:0;border-bottom:1px solid #1e293b}}
   </style>
 
+  <!--
+    IMPORTANT :
+    - @thatopen/components@3.0.0 n'existe pas sur npm/esm.sh => 404.
+    - Version vérifiée côté npm/jsDelivr au 06/05/2026 : @thatopen/components 3.4.2.
+    - On passe par esm.sh avec ?bundle pour éviter les imports internes cassés sur GitHub Pages.
+  -->
   <script type="importmap">
   {
     "imports": {
-      "@thatopen/components": "https://esm.sh/@thatopen/components@3.0.0",
-      "three": "https://esm.sh/three@0.163.0"
+      "three": "https://esm.sh/three@0.160.1",
+      "@thatopen/components": "https://esm.sh/@thatopen/components@3.4.2?bundle",
+      "@thatopen/fragments": "https://esm.sh/@thatopen/fragments@3.4.2?bundle"
     }
   }
   </script>
 </head>
 <body>
-<div class="app">
+<header>
+  <h1>Prototype IFC → vue plan 2D</h1>
+  <label class="file primary">Ouvrir IFC<input id="file" type="file" accept=".ifc,.IFC"></label>
+  <button id="topBtn" disabled>Vue plan / dessus</button>
+  <button id="isoBtn" disabled>Vue 3D</button>
+  <button id="fitBtn" disabled>Centrer</button>
+  <button id="pngBtn" disabled>Exporter PNG</button>
+</header>
+
+<main>
   <aside>
-    <h1>IFC → plan 2D</h1>
-    <div class="sub">
-      Prototype GitHub Pages sans <code>web-ifc-viewer</code>.<br>
-      Charge un fichier IFC local, affiche la maquette, détecte les niveaux dans le texte IFC et permet une vue de dessus.
+    <div class="card">
+      <b>État</b>
+      <div id="status" class="status">Initialisation…</div>
     </div>
-
-    <div class="box">
-      <label for="file">1. Charger un fichier IFC</label>
-      <input id="file" type="file" accept=".ifc,.ifczip" />
-      <button id="loadBtn" disabled>Charger la maquette</button>
-      <div id="status" class="status">En attente du fichier IFC…</div>
+    <div class="card">
+      <b>Niveaux détectés</b>
+      <div class="small">Extraction texte des <code>IFCBUILDINGSTOREY</code>. Clique sur un niveau pour information. L’isolation 3D par étage viendra dans l’étape suivante.</div>
+      <div id="storeys" class="list"></div>
     </div>
-
-    <div class="box">
-      <label>2. Niveaux détectés</label>
-      <div id="levels" class="levels">
-        <div class="level">Aucun niveau chargé.</div>
-      </div>
-    </div>
-
-    <div class="box">
-      <label>3. Vue plan</label>
-      <button id="topBtn" class="secondary" disabled>Vue de dessus</button>
-      <button id="isoBtn" class="secondary" disabled>Vue 3D</button>
-      <button id="pngBtn" class="secondary" disabled>Exporter PNG</button>
-      <div class="status" style="margin-top:10px">
-        Note : cette version donne une vue plan/capture. L’extraction vectorielle DXF/SVG réelle demandera ensuite un calcul de coupe par niveau.
-      </div>
+    <div class="card small">
+      Ce prototype charge l’IFC localement dans ton navigateur. Aucun fichier n’est envoyé sur serveur.
+      <br><br>
+      Pour un vrai plan 2D vectoriel, l’étape suivante consiste à ajouter une coupe horizontale + projection des arêtes, puis export SVG/DXF.
     </div>
   </aside>
-
-  <main>
-    <div id="container"></div>
-    <div class="topbar">
-      <button id="fitBtn" disabled>Recentrer</button>
-    </div>
-  </main>
-</div>
+  <section id="container">
+    <div id="viewer"></div>
+  </section>
+</main>
 
 <script type="module">
+import * as THREE from "three";
 import * as OBC from "@thatopen/components";
 
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
+const storeysEl = $("storeys");
 const fileInput = $("file");
-const loadBtn = $("loadBtn");
 const topBtn = $("topBtn");
 const isoBtn = $("isoBtn");
-const pngBtn = $("pngBtn");
 const fitBtn = $("fitBtn");
-const levelsEl = $("levels");
-const container = $("container");
+const pngBtn = $("pngBtn");
 
-let selectedFile = null;
-let rawIfcText = "";
-let components, world, ifcLoader, fragments;
-
-function log(msg, cls="") {
-  statusEl.innerHTML = cls ? `<span class="${cls}">${msg}</span>` : msg;
+function log(msg){
+  statusEl.textContent += "\\n" + msg;
+  statusEl.scrollTop = statusEl.scrollHeight;
 }
+function setStatus(msg){ statusEl.textContent = msg; }
 
-function parseStoreys(ifcText) {
-  const lines = ifcText.split(/\r?\n/);
-  const storeys = [];
+let components, world, fragments, loadedModel = null;
 
-  for (const line of lines) {
-    if (!/IFCBUILDINGSTOREY/i.test(line)) continue;
-
-    const id = (line.match(/^#\d+/) || [""])[0];
-
-    // Extraction simple des chaînes STEP entre apostrophes
-    const strings = [];
-    const re = /'((?:[^']|'')*)'/g;
-    let m;
-    while ((m = re.exec(line)) !== null) {
-      strings.push(m[1].replace(/''/g, "'"));
-    }
-
-    const name = strings[1] || strings[0] || "Niveau sans nom";
-
-    // Dans beaucoup d'IFC, l'élévation est l'un des derniers nombres.
-    const nums = [...line.matchAll(/[-+]?\d+(?:\.\d+)?(?:[Ee][-+]?\d+)?/g)].map(x => Number(x[0]));
-    const elevation = nums.length ? nums[nums.length - 1] : null;
-
-    storeys.push({ id, name, elevation, raw: line.trim() });
+function parseIfcStoreys(text){
+  const lines = text.split(/\\r?\\n/);
+  const rows = [];
+  const rx = /#(\\d+)\\s*=\\s*IFCBUILDINGSTOREY\\s*\\((.*)\\);/i;
+  for(const line of lines){
+    const m = line.match(rx);
+    if(!m) continue;
+    const args = m[2];
+    const quoted = [...args.matchAll(/'([^']*)'/g)].map(x => x[1]);
+    rows.push({
+      id: "#" + m[1],
+      name: quoted[1] || quoted[0] || "Niveau sans nom",
+      raw: line.trim().slice(0, 240)
+    });
   }
-
-  return storeys;
+  return rows;
 }
 
-function renderStoreys(storeys) {
-  if (!storeys.length) {
-    levelsEl.innerHTML = `<div class="level">Aucun IfcBuildingStorey détecté dans le fichier.</div>`;
+function displayStoreys(storeys){
+  storeysEl.innerHTML = "";
+  if(!storeys.length){
+    storeysEl.innerHTML = '<div class="small">Aucun IfcBuildingStorey trouvé dans le texte IFC.</div>';
     return;
   }
-
-  levelsEl.innerHTML = storeys.map((s, i) => `
-    <div class="level">
-      <strong>${i + 1}. ${escapeHtml(s.name)}</strong>
-      ${s.id ? `<span class="badge">${s.id}</span>` : ""}
-      ${Number.isFinite(s.elevation) ? `<br><span style="color:#9ca3af">Élévation probable : ${s.elevation}</span>` : ""}
-    </div>
-  `).join("");
+  storeys.forEach((s, i) => {
+    const btn = document.createElement("button");
+    btn.innerHTML = `<b>${s.name}</b> <span class="badge">${s.id}</span><div class="small">${s.raw}</div>`;
+    btn.onclick = () => log(`Niveau sélectionné : ${s.name} (${s.id})`);
+    storeysEl.appendChild(btn);
+  });
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[c]));
-}
-
-async function setupViewer() {
-  if (components) return;
-
-  log("Initialisation du viewer BIM…");
-
+async function initViewer(){
+  setStatus("Chargement des modules…");
   components = new OBC.Components();
-  const worlds = components.get(OBC.Worlds);
 
+  const worlds = components.get(OBC.Worlds);
   world = worlds.create();
   world.scene = new OBC.SimpleScene(components);
-  world.scene.setup();
-  world.scene.three.background = null;
-
-  world.renderer = new OBC.SimpleRenderer(components, container);
+  world.renderer = new OBC.SimpleRenderer(components, $("viewer"));
   world.camera = new OBC.OrthoPerspectiveCamera(components);
 
-  await world.camera.controls.setLookAt(35, 25, 35, 0, 0, 0);
   components.init();
+  world.scene.setup();
+  world.scene.three.background = new THREE.Color(0x0f172a);
 
-  components.get(OBC.Grids).create(world);
+  const grids = components.get(OBC.Grids);
+  grids.create(world);
 
-  ifcLoader = components.get(OBC.IfcLoader);
+  const workerUrl = await OBC.FragmentsManager.getWorker();
+  fragments = components.get(OBC.FragmentsManager);
+  fragments.init(workerUrl);
+
+  world.camera.controls.addEventListener("update", () => {
+    try { fragments.core.update(); } catch(e){}
+  });
+
+  fragments.list.onItemSet.add(({ value: model }) => {
+    loadedModel = model;
+    model.useCamera(world.camera.three);
+    world.scene.three.add(model.object);
+    try { fragments.core.update(true); } catch(e){}
+    enableButtons();
+    fitModel();
+    log("Modèle ajouté à la scène.");
+  });
+
+  setStatus("Prêt. Charge un fichier IFC.");
+}
+
+function enableButtons(){
+  topBtn.disabled = false;
+  isoBtn.disabled = false;
+  fitBtn.disabled = false;
+  pngBtn.disabled = false;
+}
+
+async function loadIfcFile(file){
+  setStatus(`Lecture IFC : ${file.name}`);
+  const text = await file.text();
+  displayStoreys(parseIfcStoreys(text));
+
+  log("Conversion IFC → Fragments…");
+  const ifcLoader = components.get(OBC.IfcLoader);
   await ifcLoader.setup({
     autoSetWasm: false,
     wasm: {
       path: "https://unpkg.com/web-ifc@0.0.77/",
-      absolute: true,
-    },
+      absolute: true
+    }
   });
 
-  fragments = components.get(OBC.FragmentsManager);
-  const workerUrl = await OBC.FragmentsManager.getWorker();
-  fragments.init(workerUrl);
-
-  world.camera.controls.addEventListener("update", () => fragments.core.update());
-
-  fragments.list.onItemSet.add(({ value: model }) => {
-    model.useCamera(world.camera.three);
-    world.scene.three.add(model.object);
-    fragments.core.update(true);
-    enableButtons(true);
-    fitModel();
-  });
-}
-
-function enableButtons(enabled) {
-  topBtn.disabled = !enabled;
-  isoBtn.disabled = !enabled;
-  pngBtn.disabled = !enabled;
-  fitBtn.disabled = !enabled;
-}
-
-async function fitModel() {
-  try {
-    const bboxer = components.get(OBC.BoundingBoxer);
-    bboxer.addFromModels();
-    const box = bboxer.get();
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const maxSize = Math.max(size.x, size.y, size.z, 10);
-    await world.camera.controls.setLookAt(
-      center.x + maxSize,
-      center.y + maxSize * 0.8,
-      center.z + maxSize,
-      center.x, center.y, center.z,
-      true
-    );
-    bboxer.reset();
-  } catch (e) {
-    await world.camera.controls.setLookAt(35, 25, 35, 0, 0, 0, true);
-  }
-}
-
-// Three est une dépendance de OBC, mais on en a besoin pour fitModel.
-import * as THREE from "three";
-
-fileInput.addEventListener("change", async () => {
-  selectedFile = fileInput.files?.[0] || null;
-  loadBtn.disabled = !selectedFile;
-  enableButtons(false);
-
-  if (!selectedFile) {
-    log("En attente du fichier IFC…");
-    return;
-  }
-
-  rawIfcText = await selectedFile.text();
-  const storeys = parseStoreys(rawIfcText);
-  renderStoreys(storeys);
-
-  log(`Fichier prêt : ${selectedFile.name}\n${storeys.length} niveau(x) détecté(s).`, "ok");
-});
-
-loadBtn.addEventListener("click", async () => {
-  if (!selectedFile) return;
-
-  try {
-    loadBtn.disabled = true;
-    log("Chargement IFC en cours… Cela peut prendre du temps sur un gros fichier.");
-
-    await setupViewer();
-
-    const buffer = new Uint8Array(await selectedFile.arrayBuffer());
-    await ifcLoader.load(buffer, false, selectedFile.name, {
-      processData: {
-        progressCallback: (p) => {
-          const percent = Math.round((p || 0) * 100);
-          log(`Conversion IFC → fragments : ${percent}%`);
-        }
+  const data = new TextEncoder().encode(text);
+  await ifcLoader.load(data, false, file.name, {
+    processData: {
+      progressCallback: (p) => {
+        if(typeof p === "number") statusEl.textContent = `Conversion IFC : ${Math.round(p * 100)} %`;
       }
-    });
+    }
+  });
+}
 
-    log("Maquette chargée. Tu peux passer en vue de dessus.", "ok");
-  } catch (err) {
+async function fitModel(){
+  if(!loadedModel) return;
+  const box = new THREE.Box3().setFromObject(loadedModel.object);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const d = Math.max(size.x, size.y, size.z) * 1.3 || 50;
+  await world.camera.controls.setLookAt(center.x + d, center.y + d, center.z + d, center.x, center.y, center.z, true);
+}
+
+async function topView(){
+  if(!loadedModel) return;
+  const box = new THREE.Box3().setFromObject(loadedModel.object);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const d = Math.max(size.x, size.z) * 1.6 || 50;
+  // Y est généralement l'axe vertical dans Three/ThatOpen après conversion.
+  await world.camera.controls.setLookAt(center.x, center.y + d, center.z + 0.01, center.x, center.y, center.z, true);
+  log("Vue plan activée.");
+}
+
+async function isoView(){ await fitModel(); log("Vue 3D activée."); }
+
+function exportPng(){
+  const canvas = $("viewer").querySelector("canvas");
+  if(!canvas){ log("Canvas introuvable."); return; }
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = "ifc_vue_plan.png";
+  a.click();
+}
+
+fileInput.addEventListener("change", async (e) => {
+  const file = e.target.files?.[0];
+  if(!file) return;
+  try { await loadIfcFile(file); }
+  catch(err){
     console.error(err);
-    log("Erreur chargement IFC : " + (err?.message || err), "err");
-    loadBtn.disabled = false;
+    log("ERREUR : " + (err?.message || err));
+    log("Si l'erreur vient encore d'un CDN, vide le cache navigateur ou ajoute ?v=2 à l'URL GitHub Pages.");
   }
 });
 
-topBtn.addEventListener("click", async () => {
-  try {
-    const bboxer = components.get(OBC.BoundingBoxer);
-    bboxer.addFromModels();
-    const box = bboxer.get();
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const h = Math.max(size.x, size.z, 20) * 1.7;
-    await world.camera.controls.setLookAt(center.x, center.y + h, center.z, center.x, center.y, center.z, true);
-    bboxer.reset();
-    log("Vue de dessus activée.", "ok");
-  } catch (e) {
-    await world.camera.controls.setLookAt(0, 80, 0, 0, 0, 0, true);
-  }
-});
+topBtn.onclick = topView;
+isoBtn.onclick = isoView;
+fitBtn.onclick = fitModel;
+pngBtn.onclick = exportPng;
 
-isoBtn.addEventListener("click", fitModel);
-fitBtn.addEventListener("click", fitModel);
-
-pngBtn.addEventListener("click", () => {
-  try {
-    const canvas = container.querySelector("canvas");
-    if (!canvas) return;
-    const a = document.createElement("a");
-    a.download = "plan-ifc-capture.png";
-    a.href = canvas.toDataURL("image/png");
-    a.click();
-  } catch (err) {
-    console.error(err);
-    log("Export PNG impossible : " + (err?.message || err), "err");
-  }
+initViewer().catch(err => {
+  console.error(err);
+  setStatus("Erreur initialisation : " + (err?.message || err));
 });
 </script>
 </body>
