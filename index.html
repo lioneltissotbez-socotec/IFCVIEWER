@@ -3,156 +3,215 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>IFC → Plans 2D SAFE sans WASM</title>
+  <title>IFC SAFE Viewer — plans 2D / vue 3D simplifiée</title>
   <link rel="icon" href="data:,">
   <style>
-    :root{--bg:#0b1020;--panel:#121a2f;--panel2:#18233d;--txt:#eaf0ff;--muted:#9fb0d0;--line:#2d3b61;--accent:#6ee7ff;--ok:#7CFFB2;--warn:#ffd166;--bad:#ff6b6b}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt)}
-    header{padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#121a2f,#0b1020)}
-    h1{font-size:18px;margin:0 0 4px} .sub{color:var(--muted);font-size:13px}
-    main{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 72px)}
-    aside{border-right:1px solid var(--line);background:var(--panel);padding:14px;overflow:auto}
-    section{position:relative;overflow:hidden;background:#070b16}
-    .card{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px} input,select,button{width:100%;border-radius:10px;border:1px solid var(--line);background:#0c1428;color:var(--txt);padding:10px;font-size:14px}
-    button{cursor:pointer;background:#183153} button:hover{border-color:var(--accent)} button.secondary{background:#10192d}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hint{font-size:12px;color:var(--muted);line-height:1.35}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-    #viewerWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-    svg{width:100%;height:100%;background:#07101f;touch-action:none;cursor:grab} svg:active{cursor:grabbing}
-    .levelBtn{display:flex;justify-content:space-between;gap:8px;margin:6px 0;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#0c1428;cursor:pointer}.levelBtn.active{border-color:var(--accent);background:#12324a}.small{font-size:11px;color:var(--muted)}
-    #log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;max-height:230px;overflow:auto;background:#070b16;border-radius:10px;padding:10px;color:#cfe0ff}
-    .toolbar{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:2}.toolbar button{width:auto;padding:9px 12px}
-    @media(max-width:820px){main{grid-template-columns:1fr} aside{border-right:0;border-bottom:1px solid var(--line)} section{height:62vh}}
+    :root{
+      --bg:#0b1020; --panel:#121a2f; --panel2:#17213b; --line:#263858; --text:#eaf0ff; --muted:#9fb0cf;
+      --accent:#ffd34d; --accent2:#6cc9ff; --ok:#5ee38a; --warn:#ffb86b; --bad:#ff6b6b;
+      --shadow:0 16px 40px rgba(0,0,0,.35); --r:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(135deg,#08101f,#101a33 55%,#07111f);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
+    button,input,select{font:inherit}
+    .app{height:100%;display:grid;grid-template-columns:360px 1fr;gap:12px;padding:12px}
+    .sidebar{background:rgba(18,26,47,.96);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+    .head{padding:16px;border-bottom:1px solid var(--line)}
+    h1{font-size:18px;margin:0 0 6px 0;letter-spacing:.2px}.sub{font-size:12px;color:var(--muted);line-height:1.4}
+    .drop{margin-top:14px;border:1px dashed #50658b;border-radius:16px;padding:14px;background:#0d1528;text-align:center;cursor:pointer;transition:.2s}
+    .drop:hover,.drop.drag{border-color:var(--accent);background:#131d34}.drop strong{display:block;margin-bottom:4px}.drop span{font-size:12px;color:var(--muted)}
+    #file{display:none}.scroll{overflow:auto;padding:12px;min-height:0}.section{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:16px;margin-bottom:12px;overflow:hidden}.section h2{font-size:13px;margin:0;padding:11px 12px;background:rgba(255,255,255,.045);display:flex;justify-content:space-between;align-items:center}.section .body{padding:10px 12px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0d1528;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}.stat b{display:block;font-size:18px}.stat span{color:var(--muted);font-size:11px}.controls{display:grid;gap:8px}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.btn{border:1px solid rgba(255,255,255,.12);background:#1b2946;color:var(--text);border-radius:12px;padding:9px 10px;cursor:pointer}.btn:hover{border-color:var(--accent);filter:brightness(1.08)}.btn.primary{background:linear-gradient(135deg,#f0c64d,#d99f25);color:#111;font-weight:700}.btn.small{padding:6px 8px;font-size:12px}.btn.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,211,77,.16) inset}.select,.input{width:100%;border:1px solid rgba(255,255,255,.12);background:#0d1528;color:var(--text);border-radius:12px;padding:9px 10px}.check{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px}.levels{display:grid;gap:7px}.level{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0d1528;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 10px;cursor:pointer}.level:hover,.level.active{border-color:var(--accent)}.level .name{font-size:13px}.level .meta{font-size:11px;color:var(--muted)}.log{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;color:#bdd1f7;background:#07101f;border-radius:12px;padding:10px;max-height:160px;overflow:auto;white-space:pre-wrap}
+    .main{display:grid;grid-template-rows:auto 1fr;gap:12px;min-width:0;min-height:0}.toolbar{background:rgba(18,26,47,.9);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow)}.toolbar .spacer{flex:1}.badge{font-size:12px;color:#0b1020;background:var(--accent);border-radius:999px;padding:6px 10px;font-weight:700}.viewgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0}.viewgrid.only2d{grid-template-columns:1fr}.viewgrid.only2d .card3d{display:none}.viewgrid.only3d{grid-template-columns:1fr}.viewgrid.only3d .card2d{display:none}.card{position:relative;background:#f7f8fb;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;min-height:0}.card.dark{background:#0d1528}.canvas{width:100%;height:100%;display:block}.canvasTitle{position:absolute;top:12px;left:12px;background:rgba(12,18,32,.82);color:white;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:7px 11px;font-size:12px;backdrop-filter:blur(8px)}.hint{position:absolute;bottom:12px;left:12px;right:12px;background:rgba(12,18,32,.82);color:#dbe8ff;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:9px 11px;font-size:12px;backdrop-filter:blur(8px);line-height:1.35}.overlayEmpty{position:absolute;inset:0;display:grid;place-items:center;color:#52617a;text-align:center;padding:30px}.overlayEmpty b{display:block;color:#2a344a;font-size:20px;margin-bottom:6px}.dark .overlayEmpty b{color:#dce7ff}.dark .overlayEmpty{color:#91a5c7}
+    @media(max-width:980px){.app{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto}.sidebar{max-height:42vh}.viewgrid{grid-template-columns:1fr}.toolbar{flex-wrap:wrap}html,body{overflow:auto}.main{min-height:720px}}
   </style>
 </head>
 <body>
-<header>
-  <h1>IFC → Plans 2D SAFE</h1>
-  <div class="sub">Prototype sans WASM : évite les plantages “non manifold / memory access out of bounds” et extrait les contours 2D depuis le texte IFC.</div>
-</header>
-<main>
-  <aside>
-    <div class="card">
-      <label>Fichier IFC local</label>
+<div class="app">
+  <aside class="sidebar">
+    <div class="head">
+      <h1>IFC SAFE Viewer</h1>
+      <div class="sub">Lecture IFC sans WASM : extraction texte, plans 2D, vue 3D simplifiée et exports.</div>
+      <label id="drop" class="drop" for="file"><strong>Déposer ou choisir un fichier IFC</strong><span>Aucun envoi serveur : lecture locale navigateur</span></label>
       <input id="file" type="file" accept=".ifc,.txt" />
-      <p class="hint">Cette version ne charge pas la géométrie 3D triangulée. Elle lit directement le fichier IFC STEP et tente d'extraire les profils 2D : dalles, espaces, murs, polylignes, profils extrudés.</p>
     </div>
-    <div class="card">
-      <label>Niveau détecté</label>
-      <select id="storeySelect"><option>Aucun fichier chargé</option></select>
-      <div id="levels"></div>
-    </div>
-    <div class="card row">
-      <button id="fit">Ajuster</button>
-      <button id="exportSvg" class="secondary">Exporter SVG</button>
-    </div>
-    <div class="card row">
-      <button id="zoomIn" class="secondary">Zoom +</button>
-      <button id="zoomOut" class="secondary">Zoom -</button>
-    </div>
-    <div class="card">
-      <div class="hint"><b>Lecture des résultats</b><br>• Vert : contours associés à un étage.<br>• Jaune : géométrie récupérée mais étage incertain.<br>• Si rien n’apparaît, l’IFC utilise probablement une géométrie BREP/triangulée non exploitable en extraction texte simple.</div>
-    </div>
-    <div class="card">
-      <label>Journal</label>
-      <div id="log">En attente d’un fichier IFC…</div>
+    <div class="scroll">
+      <div class="section"><h2>Résumé <span id="status">prêt</span></h2><div class="body stats">
+        <div class="stat"><b id="sStoreys">0</b><span>niveaux</span></div>
+        <div class="stat"><b id="sPoints">0</b><span>points</span></div>
+        <div class="stat"><b id="sLines">0</b><span>lignes/polylignes</span></div>
+        <div class="stat"><b id="sEntities">0</b><span>entités IFC</span></div>
+      </div></div>
+
+      <div class="section"><h2>Affichage</h2><div class="body controls">
+        <select id="levelSelect" class="select"><option value="all">Tous les niveaux détectés</option></select>
+        <div class="row"><button id="fit2d" class="btn small">Cadrer 2D</button><button id="fit3d" class="btn small">Cadrer 3D</button></div>
+        <label class="check"><input id="showGrid" type="checkbox" checked> Grille</label>
+        <label class="check"><input id="showLabels" type="checkbox" checked> Libellés niveaux</label>
+        <label class="check"><input id="showOpen" type="checkbox" checked> Lignes ouvertes</label>
+        <label class="check"><input id="showClosed" type="checkbox" checked> Contours fermés</label>
+      </div></div>
+
+      <div class="section"><h2>Niveaux</h2><div class="body"><div id="levels" class="levels"><div class="sub">Charge un IFC pour lister les niveaux.</div></div></div></div>
+
+      <div class="section"><h2>Export</h2><div class="body controls">
+        <button id="png2d" class="btn">Exporter 2D PNG</button>
+        <button id="svg2d" class="btn">Exporter 2D SVG</button>
+        <button id="png3d" class="btn">Exporter 3D PNG</button>
+      </div></div>
+
+      <div class="section"><h2>Journal</h2><div class="body"><div id="log" class="log">En attente du fichier IFC…</div></div></div>
     </div>
   </aside>
-  <section>
-    <div class="toolbar"><button id="allLevels">Tous niveaux</button></div>
-    <div id="viewerWrap"><svg id="svg" viewBox="-10 -10 20 20" xmlns="http://www.w3.org/2000/svg"></svg></div>
-  </section>
-</main>
-<script type="module">
-const $ = (id)=>document.getElementById(id);
-const logEl=$('log'), svg=$('svg'), select=$('storeySelect'), levelsEl=$('levels');
-let db=null, current='__ALL__', view={x:-10,y:-10,w:20,h:20};
-function log(msg, cls=''){ logEl.innerHTML += `\n${msg}`; logEl.scrollTop=logEl.scrollHeight; }
-function resetLog(msg){ logEl.textContent=msg; }
-function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function splitArgs(s){ const out=[]; let cur='', d=0, q=false; for(let i=0;i<s.length;i++){ const c=s[i]; if(c==="'" && s[i-1]!=="\\") q=!q; if(!q){ if(c==='(') d++; else if(c===')') d--; else if(c===',' && d===0){out.push(cur.trim()); cur=''; continue;} } cur+=c;} if(cur.trim()) out.push(cur.trim()); return out; }
-function idsIn(s){ return [...String(s).matchAll(/#(\d+)/g)].map(m=>'#'+m[1]); }
-function parseIfc(text){
-  resetLog('Analyse IFC texte…');
-  text=text.replace(/\/\*[\s\S]*?\*\//g,'');
-  const entities=new Map();
-  const re=/#(\d+)\s*=\s*([A-Z0-9_]+)\s*\(([\s\S]*?)\);/g; let m, count=0;
-  while((m=re.exec(text))){ entities.set('#'+m[1], {id:'#'+m[1], type:m[2], raw:m[3], args:splitArgs(m[3])}); count++; }
-  log(`Entités IFC lues : ${count}`);
-  const points=new Map(), polylines=new Map(), profiles=new Map(), solids=new Map(), reps=new Map(), products=new Map(), storeys=new Map();
-  for(const [id,e] of entities){
-    if(e.type==='IFCCARTESIANPOINT'){
-      const nums=[...e.raw.matchAll(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)].map(v=>Number(v[0]));
-      if(nums.length>=2) points.set(id,{x:nums[0],y:nums[1],z:nums[2]||0});
+
+  <main class="main">
+    <div class="toolbar">
+      <button class="btn active" data-layout="split">2D + 3D</button>
+      <button class="btn" data-layout="only2d">Plan 2D</button>
+      <button class="btn" data-layout="only3d">Vue 3D</button>
+      <span class="spacer"></span>
+      <span id="fileName" class="badge">Aucun IFC</span>
+    </div>
+    <div id="viewgrid" class="viewgrid">
+      <section class="card card2d">
+        <canvas id="canvas2d" class="canvas"></canvas>
+        <div class="canvasTitle">Plan 2D — vue de dessus</div>
+        <div id="empty2d" class="overlayEmpty"><div><b>Plan 2D</b>Charge un IFC pour afficher les polylignes détectées.</div></div>
+        <div class="hint">Molette : zoom · clic-glissé : déplacer · double-clic : cadrage automatique</div>
+      </section>
+      <section class="card dark card3d">
+        <canvas id="canvas3d" class="canvas"></canvas>
+        <div class="canvasTitle">Vue 3D simplifiée — projection axonométrique</div>
+        <div id="empty3d" class="overlayEmpty"><div><b>Vue 3D</b>Reconstruction légère à partir des points/polylignes IFC extraits.</div></div>
+        <div class="hint">Molette : zoom · clic-glissé : rotation · clic droit/glissé : déplacer · double-clic : cadrage automatique</div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fileInput=$('file'), drop=$('drop'), logEl=$('log'), statusEl=$('status'), fileNameEl=$('fileName');
+  const c2=$('canvas2d'), ctx2=c2.getContext('2d');
+  const c3=$('canvas3d'), ctx3=c3.getContext('2d');
+  let model=null;
+  let view2={scale:1, ox:0, oy:0, dragging:false, last:null};
+  let view3={scale:1, ox:0, oy:0, rotY:-0.72, rotX:0.72, dragging:false, panning:false, last:null};
+
+  function log(msg){ logEl.textContent = msg + "\n" + logEl.textContent; }
+  function setStatus(t){ statusEl.textContent=t; }
+  function resize(){ for(const c of [c2,c3]){ const r=c.getBoundingClientRect(); const dpr=window.devicePixelRatio||1; c.width=Math.max(200,Math.round(r.width*dpr)); c.height=Math.max(200,Math.round(r.height*dpr)); c.getContext('2d').setTransform(dpr,0,0,dpr,0,0); } drawAll(); }
+  window.addEventListener('resize', resize); setTimeout(resize,50);
+
+  drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('drag')});
+  drop.addEventListener('dragleave', ()=>drop.classList.remove('drag'));
+  drop.addEventListener('drop', e=>{e.preventDefault();drop.classList.remove('drag'); if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);});
+  fileInput.addEventListener('change', e=>{ if(e.target.files[0]) loadFile(e.target.files[0]); });
+
+  async function loadFile(file){
+    setStatus('lecture…'); fileNameEl.textContent=file.name; logEl.textContent='Lecture locale du fichier…';
+    const text=await file.text();
+    try{ model=parseIFC(text); setStatus('chargé'); log(`Fichier lu : ${file.name}\n${model.storeys.length} niveaux · ${model.points.size} points · ${model.curves.length} lignes/polylignes.`); updateUI(); autoFit2D(); autoFit3D(); drawAll(); $('empty2d').style.display='none'; $('empty3d').style.display='none'; }
+    catch(err){ setStatus('erreur'); log('Erreur parsing : '+err.message); console.error(err); }
+  }
+
+  function parseIFC(text){
+    const lines=text.split(/;\s*(?:\r?\n)?/g).filter(Boolean);
+    const entities=new Map();
+    const points=new Map(); const dirs=new Map(); const placements=new Map(); const storeys=[]; const curves=[];
+    const entityRe=/^\s*#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.*)\)\s*$/is;
+    for(const raw of lines){ const m=raw.match(entityRe); if(!m) continue; const id=+m[1], type=m[2].toUpperCase(), args=m[3]; entities.set(id,{id,type,args,raw});
+      if(type==='IFCCARTESIANPOINT'){
+        const nums=(args.match(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)||[]).map(Number);
+        if(nums.length>=2) points.set(id,{id,x:nums[0],y:nums[1],z:nums[2]||0});
+      }
+      if(type==='IFCDIRECTION'){
+        const nums=(args.match(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)||[]).map(Number); dirs.set(id,{id,x:nums[0]||0,y:nums[1]||0,z:nums[2]||0});
+      }
+      if(type==='IFCAXIS2PLACEMENT3D' || type==='IFCAXIS2PLACEMENT2D'){
+        const refs=[...args.matchAll(/#(\d+)/g)].map(x=>+x[1]); placements.set(id,{id,loc:refs[0],refs});
+      }
+      if(type==='IFCBUILDINGSTOREY'){
+        const name=(args.match(/'((?:''|[^'])*)'/)||[])[1]?.replace(/''/g,"'") || `Niveau #${id}`;
+        const refs=[...args.matchAll(/#(\d+)/g)].map(x=>+x[1]);
+        const nums=(args.match(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)||[]).map(Number);
+        const elev=nums.length? nums[nums.length-1] : null;
+        storeys.push({id,name,elev,refs,curveCount:0});
+      }
     }
-    if(e.type==='IFCPOLYLINE') polylines.set(id, idsIn(e.raw));
-    if(e.type.includes('PROFILEDEF')) profiles.set(id, idsIn(e.raw));
-    if(e.type==='IFCEXTRUDEDAREASOLID') solids.set(id, idsIn(e.raw));
-    if(e.type==='IFCSHAPEREPRESENTATION' || e.type==='IFCPRODUCTDEFINITIONSHAPE') reps.set(id, idsIn(e.raw));
-    if(e.type==='IFCBUILDINGSTOREY'){
-      const name=(e.args[2]||id).replace(/^'|'$/g,'');
-      const nums=[...e.raw.matchAll(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)].map(v=>Number(v[0]));
-      storeys.set(id,{id,name, elevation: nums.length?nums[nums.length-1]:0, products:new Set(), paths:[]});
+    // Polylines / indexed polycurves. This catches many lightweight IFC geometries without invoking the geometry engine.
+    for(const ent of entities.values()){
+      if(ent.type==='IFCPOLYLINE'){
+        const refs=[...ent.args.matchAll(/#(\d+)/g)].map(x=>+x[1]); const pts=refs.map(r=>points.get(r)).filter(Boolean);
+        if(pts.length>=2) curves.push(makeCurve(ent.id,ent.type,pts));
+      }
+      if(ent.type==='IFCINDEXEDPOLYCURVE'){
+        const refs=[...ent.args.matchAll(/#(\d+)/g)].map(x=>+x[1]);
+        // Full indexed polycurve decoding is complex; keep entity visible in stats for future parsing.
+      }
+      if(ent.type==='IFCBOUNDINGBOX'){
+        const refs=[...ent.args.matchAll(/#(\d+)/g)].map(x=>+x[1]); const p=points.get(refs[0]);
+        const nums=(ent.args.match(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)||[]).map(Number);
+        if(p && nums.length>=3){ const [dx,dy,dz]=nums.slice(-3); curves.push(makeCurve(ent.id,ent.type,[p,{x:p.x+dx,y:p.y,z:p.z},{x:p.x+dx,y:p.y+dy,z:p.z},{x:p.x,y:p.y+dy,z:p.z},{x:p.x,y:p.y,z:p.z}])); }
+      }
     }
-    if(/^IFC(WALL|WALLSTANDARDCASE|SLAB|SPACE|COVERING|FOOTING|BUILDINGELEMENTPROXY|COLUMN|BEAM|DOOR|WINDOW)/.test(e.type)) {
-      products.set(id,{id,type:e.type, refs:idsIn(e.raw), storey:null});
+    // Add storey reference lines when no curves exist: useful to at least visualize level markers.
+    const bounds=computeBounds(curves.flatMap(c=>c.pts));
+    if(curves.length===0 && points.size>1){
+      const pts=[...points.values()];
+      for(let i=0;i<Math.min(400,pts.length-1);i+=2) curves.push(makeCurve(pts[i].id,'POINT-LINK',[pts[i],pts[i+1]]));
     }
+    const zVals=[...new Set([...points.values()].map(p=>roundZ(p.z)))].sort((a,b)=>a-b);
+    if(storeys.length===0) zVals.forEach((z,i)=>storeys.push({id:i+1,name:`Z ${z}`,elev:z,refs:[],curveCount:0}));
+    for(const c of curves){ const nearest=nearestStorey(storeys,c.z); if(nearest){ c.storeyId=nearest.id; nearest.curveCount++; }}
+    return {entities,points,dirs,placements,storeys:storeys.sort((a,b)=>(a.elev??0)-(b.elev??0)),curves,bounds:computeBounds(curves.flatMap(c=>c.pts))};
   }
-  // Relation éléments -> étage
-  for(const [id,e] of entities){
-    if(e.type==='IFCRELCONTAINEDINSPATIALSTRUCTURE'){
-      const refs=idsIn(e.raw); const storeyId=[...refs].reverse().find(r=>storeys.has(r));
-      if(storeyId){ for(const r of refs){ if(products.has(r)){ products.get(r).storey=storeyId; storeys.get(storeyId).products.add(r); } } }
-    }
+  function roundZ(z){ return Math.round((z||0)*100)/100; }
+  function nearestStorey(storeys,z){ if(!storeys.length) return null; let best=storeys[0], bd=Infinity; for(const s of storeys){ const e=s.elev??0; const d=Math.abs(e-z); if(d<bd){bd=d;best=s;} } return best; }
+  function makeCurve(id,type,pts){ const z=pts.reduce((s,p)=>s+(p.z||0),0)/pts.length; const closed=pts.length>2 && dist2(pts[0],pts[pts.length-1])<1e-8; return {id,type,pts,z,closed,storeyId:null}; }
+  function dist2(a,b){ return (a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2; }
+  function computeBounds(pts){ if(!pts.length) return {minX:0,maxX:1,minY:0,maxY:1,minZ:0,maxZ:1}; let minX=Infinity,minY=Infinity,minZ=Infinity,maxX=-Infinity,maxY=-Infinity,maxZ=-Infinity; for(const p of pts){ minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x); minY=Math.min(minY,p.y); maxY=Math.max(maxY,p.y); minZ=Math.min(minZ,p.z||0); maxZ=Math.max(maxZ,p.z||0);} return {minX,maxX,minY,maxY,minZ,maxZ}; }
+
+  function filteredCurves(){ if(!model) return []; const lev=$('levelSelect').value; return model.curves.filter(c=>(lev==='all'||String(c.storeyId)===lev) && (($('showOpen').checked&&!c.closed)||($('showClosed').checked&&c.closed))); }
+  function updateUI(){
+    $('sStoreys').textContent=model.storeys.length; $('sPoints').textContent=model.points.size; $('sLines').textContent=model.curves.length; $('sEntities').textContent=model.entities.size;
+    const sel=$('levelSelect'); sel.innerHTML='<option value="all">Tous les niveaux détectés</option>'+model.storeys.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}${s.elev!=null?' — Z '+s.elev:''}</option>`).join('');
+    $('levels').innerHTML=model.storeys.map(s=>`<div class="level" data-level="${s.id}"><div><div class="name">${escapeHtml(s.name)}</div><div class="meta">Z ${s.elev??'?'}</div></div><div class="meta">${s.curveCount} lignes</div></div>`).join('') || '<div class="sub">Aucun niveau IFC détecté.</div>';
+    document.querySelectorAll('.level').forEach(el=>el.onclick=()=>{ sel.value=el.dataset.level; syncLevelActive(); autoFit2D(); autoFit3D(); drawAll(); });
+    syncLevelActive();
   }
-  function collectPolylineIds(start, seen=new Set()){
-    if(!start || seen.has(start)) return []; seen.add(start);
-    if(polylines.has(start)) return [start];
-    const e=entities.get(start); if(!e) return [];
-    let out=[]; for(const r of idsIn(e.raw)) out=out.concat(collectPolylineIds(r, seen));
-    return out;
+  function syncLevelActive(){ const v=$('levelSelect').value; document.querySelectorAll('.level').forEach(el=>el.classList.toggle('active',el.dataset.level===v)); }
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+  $('levelSelect').onchange=()=>{syncLevelActive(); autoFit2D(); autoFit3D(); drawAll();};
+  ['showGrid','showLabels','showOpen','showClosed'].forEach(id=>$(id).onchange=drawAll);
+
+  function autoFit2D(){ const curves=filteredCurves(); const b=computeBounds(curves.flatMap(c=>c.pts)); const r=c2.getBoundingClientRect(); const w=r.width,h=r.height; const dx=Math.max(1,b.maxX-b.minX), dy=Math.max(1,b.maxY-b.minY); view2.scale=.86*Math.min(w/dx,h/dy); view2.ox=w/2-(b.minX+b.maxX)/2*view2.scale; view2.oy=h/2+(b.minY+b.maxY)/2*view2.scale; }
+  function world2screen(p){ return {x:p.x*view2.scale+view2.ox, y:-p.y*view2.scale+view2.oy}; }
+  function draw2D(){ const r=c2.getBoundingClientRect(), w=r.width,h=r.height; ctx2.clearRect(0,0,w,h); ctx2.fillStyle='#f7f8fb'; ctx2.fillRect(0,0,w,h); if($('showGrid').checked) drawGrid2D(w,h); if(!model)return; const curves=filteredCurves(); ctx2.lineCap='round'; ctx2.lineJoin='round'; for(const c of curves){ const pts=c.pts.map(world2screen); ctx2.beginPath(); pts.forEach((p,i)=>i?ctx2.lineTo(p.x,p.y):ctx2.moveTo(p.x,p.y)); ctx2.strokeStyle=c.closed?'#15243d':'#2f7fb8'; ctx2.lineWidth=c.closed?2.2:1.35; ctx2.stroke(); if(c.closed){ctx2.fillStyle='rgba(255,211,77,.07)';ctx2.fill();} }
+    if($('showLabels').checked){ ctx2.fillStyle='#13233f'; ctx2.font='12px Inter,Arial'; const by=new Map(); for(const c of curves){ const s=model.storeys.find(x=>x.id===c.storeyId); if(!s)continue; if(!by.has(s.id))by.set(s.id,{s,pts:[]}); by.get(s.id).pts.push(...c.pts);} for(const {s,pts} of by.values()){ const b=computeBounds(pts); const p=world2screen({x:b.minX,y:b.maxY}); ctx2.fillText(`${s.name}  Z ${s.elev??''}`,p.x+8,p.y+18); }}
   }
-  function polyToPath(polyId){
-    const pts=(polylines.get(polyId)||[]).map(pid=>points.get(pid)).filter(Boolean);
-    if(pts.length<2) return null;
-    return {polyId, pts};
+  function drawGrid2D(w,h){ const step=50; ctx2.strokeStyle='#e1e6ef'; ctx2.lineWidth=1; ctx2.beginPath(); for(let x=((view2.ox%step)+step)%step;x<w;x+=step){ctx2.moveTo(x,0);ctx2.lineTo(x,h)} for(let y=((view2.oy%step)+step)%step;y<h;y+=step){ctx2.moveTo(0,y);ctx2.lineTo(w,y)} ctx2.stroke(); }
+
+  function autoFit3D(){ const curves=filteredCurves(); const pts=curves.flatMap(c=>c.pts); if(!pts.length)return; const b=computeBounds(pts), r=c3.getBoundingClientRect(), w=r.width,h=r.height; const dx=Math.max(1,b.maxX-b.minX), dy=Math.max(1,b.maxY-b.minY), dz=Math.max(1,b.maxZ-b.minZ); view3.scale=.75*Math.min(w/(dx+dy),h/(dy*.7+dz+dx*.3)); view3.ox=w/2; view3.oy=h/2; }
+  function project3(p){ const b=model?.bounds||{minX:0,maxX:0,minY:0,maxY:0,minZ:0,maxZ:0}; let x=p.x-(b.minX+b.maxX)/2, y=p.y-(b.minY+b.maxY)/2, z=(p.z||0)-(b.minZ+b.maxZ)/2; const cy=Math.cos(view3.rotY), sy=Math.sin(view3.rotY), cx=Math.cos(view3.rotX), sx=Math.sin(view3.rotX); let x1=x*cy-z*sy, z1=x*sy+z*cy; let y1=y*cx-z1*sx, z2=y*sx+z1*cx; return {x:x1*view3.scale+view3.ox, y:-y1*view3.scale+view3.oy, depth:z2}; }
+  function draw3D(){ const r=c3.getBoundingClientRect(), w=r.width,h=r.height; ctx3.clearRect(0,0,w,h); const g=ctx3.createLinearGradient(0,0,w,h); g.addColorStop(0,'#07101f'); g.addColorStop(1,'#14213f'); ctx3.fillStyle=g; ctx3.fillRect(0,0,w,h); if(!model)return; const curves=filteredCurves().slice().sort((a,b)=>a.z-b.z); drawAxes3D(); for(const c of curves){ const pts=c.pts.map(project3); ctx3.beginPath(); pts.forEach((p,i)=>i?ctx3.lineTo(p.x,p.y):ctx3.moveTo(p.x,p.y)); ctx3.strokeStyle=c.closed?'rgba(255,211,77,.9)':'rgba(108,201,255,.78)'; ctx3.lineWidth=c.closed?2:1.25; ctx3.stroke(); }
   }
-  const orphanPaths=[];
-  for(const [pid,p] of products){
-    let pids=[]; for(const r of p.refs) pids=pids.concat(collectPolylineIds(r));
-    pids=[...new Set(pids)];
-    for(const pl of pids){ const path=polyToPath(pl); if(!path) continue; path.product=pid; path.type=p.type; path.storey=p.storey; if(p.storey && storeys.has(p.storey)) storeys.get(p.storey).paths.push(path); else orphanPaths.push(path); }
-  }
-  // Fallback : toutes polylignes non associées
-  const used=new Set([...storeys.values()].flatMap(s=>s.paths.map(p=>p.polyId)).concat(orphanPaths.map(p=>p.polyId)));
-  for(const [pl] of polylines){ if(!used.has(pl)){ const path=polyToPath(pl); if(path) orphanPaths.push({...path,type:'ORPHELINE',storey:null}); } }
-  log(`Niveaux détectés : ${storeys.size}`);
-  log(`Contours associés à un étage : ${[...storeys.values()].reduce((a,s)=>a+s.paths.length,0)}`);
-  log(`Contours sans étage certain : ${orphanPaths.length}`);
-  return {entities, points, polylines, products, storeys:[...storeys.values()].sort((a,b)=>(a.elevation||0)-(b.elevation||0)), orphanPaths};
-}
-function bounds(paths){ let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity; for(const p of paths){ for(const pt of p.pts){ minX=Math.min(minX,pt.x); minY=Math.min(minY,pt.y); maxX=Math.max(maxX,pt.x); maxY=Math.max(maxY,pt.y); }} if(!isFinite(minX)) return {x:-10,y:-10,w:20,h:20}; const pad=Math.max(maxX-minX,maxY-minY)*0.08||1; return {x:minX-pad,y:-(maxY+pad),w:(maxX-minX)+2*pad,h:(maxY-minY)+2*pad}; }
-function getPaths(){ if(!db) return []; if(current==='__ALL__') return db.storeys.flatMap(s=>s.paths).concat(db.orphanPaths); const s=db.storeys.find(x=>x.id===current); return s? s.paths : db.orphanPaths; }
-function render(){
-  const paths=getPaths(); svg.innerHTML=''; svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);
-  const g=document.createElementNS('http://www.w3.org/2000/svg','g'); svg.appendChild(g);
-  const grid=document.createElementNS('http://www.w3.org/2000/svg','g'); grid.setAttribute('opacity','.22'); g.appendChild(grid);
-  const step=5; for(let x=Math.floor((view.x)/step)*step;x<view.x+view.w;x+=step){ const l=document.createElementNS(svg.namespaceURI,'line'); l.setAttribute('x1',x);l.setAttribute('y1',view.y);l.setAttribute('x2',x);l.setAttribute('y2',view.y+view.h);l.setAttribute('stroke','#2d3b61');l.setAttribute('stroke-width',view.w/900);grid.appendChild(l); }
-  for(let y=Math.floor((view.y)/step)*step;y<view.y+view.h;y+=step){ const l=document.createElementNS(svg.namespaceURI,'line'); l.setAttribute('x1',view.x);l.setAttribute('y1',y);l.setAttribute('x2',view.x+view.w);l.setAttribute('y2',y);l.setAttribute('stroke','#2d3b61');l.setAttribute('stroke-width',view.w/900);grid.appendChild(l); }
-  for(const p of paths){ const poly=document.createElementNS(svg.namespaceURI,'polyline'); poly.setAttribute('points',p.pts.map(pt=>`${pt.x},${-pt.y}`).join(' ')); poly.setAttribute('fill','none'); poly.setAttribute('stroke',p.storey?'#7CFFB2':'#ffd166'); poly.setAttribute('stroke-width',Math.max(view.w/420,0.02)); poly.setAttribute('stroke-linejoin','round'); poly.setAttribute('stroke-linecap','round'); const title=document.createElementNS(svg.namespaceURI,'title'); title.textContent=`${p.type||''} ${p.product||''} ${p.polyId||''}`; poly.appendChild(title); g.appendChild(poly); }
-  if(!paths.length){ const t=document.createElementNS(svg.namespaceURI,'text'); t.setAttribute('x',view.x+view.w/2); t.setAttribute('y',view.y+view.h/2); t.setAttribute('text-anchor','middle'); t.setAttribute('fill','#9fb0d0'); t.setAttribute('font-size',view.w/45); t.textContent='Aucun contour 2D exploitable détecté pour ce niveau'; svg.appendChild(t); }
-}
-function populate(){ select.innerHTML=''; levelsEl.innerHTML=''; const optAll=new Option('Tous les niveaux + contours orphelins','__ALL__'); select.add(optAll); for(const s of db.storeys){ select.add(new Option(`${s.name} — ${s.paths.length} contours`,s.id)); const div=document.createElement('div'); div.className='levelBtn'; div.dataset.id=s.id; div.innerHTML=`<span>${esc(s.name)}</span><span class="small">${s.paths.length}</span>`; div.onclick=()=>{current=s.id; select.value=s.id; fit(); activeBtns();}; levelsEl.appendChild(div);} const div=document.createElement('div'); div.className='levelBtn'; div.dataset.id='__ORPHANS__'; div.innerHTML=`<span>Contours sans étage</span><span class="small">${db.orphanPaths.length}</span>`; div.onclick=()=>{current='__ORPHANS__'; select.value='__ORPHANS__'; fit(); activeBtns();}; levelsEl.appendChild(div); select.add(new Option(`Contours sans étage — ${db.orphanPaths.length}`,'__ORPHANS__')); activeBtns(); }
-function activeBtns(){ [...levelsEl.children].forEach(d=>d.classList.toggle('active',d.dataset.id===current)); }
-function fit(){ view=bounds(getPaths()); render(); }
-$('file').addEventListener('change', async e=>{ const file=e.target.files[0]; if(!file) return; try{ resetLog(`Chargement : ${file.name}`); const text=await file.text(); db=parseIfc(text); current='__ALL__'; populate(); fit(); log('Mode SAFE opérationnel : aucune géométrie WASM chargée, donc pas de crash non-manifold.'); }catch(err){ console.error(err); log('Erreur : '+err.message); } });
-select.onchange=()=>{ current=select.value; fit(); activeBtns(); };
-$('fit').onclick=fit; $('allLevels').onclick=()=>{current='__ALL__'; select.value=current; fit(); activeBtns();};
-$('zoomIn').onclick=()=>{view.x+=view.w*.1;view.y+=view.h*.1;view.w*=.8;view.h*=.8;render();};
-$('zoomOut').onclick=()=>{view.x-=view.w*.125;view.y-=view.h*.125;view.w*=1.25;view.h*=1.25;render();};
-$('exportSvg').onclick=()=>{ const data='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.outerHTML); const a=document.createElement('a'); a.href=data; a.download='plan-ifc-safe.svg'; a.click(); };
-// Pan simple
-let drag=null; svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,v:{...view}}; svg.setPointerCapture(e.pointerId);}); svg.addEventListener('pointermove',e=>{ if(!drag)return; const dx=(e.clientX-drag.x)/svg.clientWidth*drag.v.w; const dy=(e.clientY-drag.y)/svg.clientHeight*drag.v.h; view={...drag.v,x:drag.v.x-dx,y:drag.v.y-dy}; render();}); svg.addEventListener('pointerup',()=>drag=null);
-render();
+  function drawAxes3D(){ if(!model)return; const b=model.bounds; const o={x:b.minX,y:b.minY,z:b.minZ}, px={x:b.maxX,y:b.minY,z:b.minZ}, py={x:b.minX,y:b.maxY,z:b.minZ}, pz={x:b.minX,y:b.minY,z:b.maxZ}; const O=project3(o), X=project3(px), Y=project3(py), Z=project3(pz); ctx3.lineWidth=1.5; [[X,'X'],[Y,'Y'],[Z,'Z']].forEach(([P,L])=>{ctx3.beginPath();ctx3.moveTo(O.x,O.y);ctx3.lineTo(P.x,P.y);ctx3.strokeStyle='rgba(255,255,255,.22)';ctx3.stroke();ctx3.fillStyle='rgba(255,255,255,.65)';ctx3.fillText(L,P.x+4,P.y+4);}); }
+  function drawAll(){ draw2D(); draw3D(); }
+
+  $('fit2d').onclick=()=>{autoFit2D();drawAll();}; $('fit3d').onclick=()=>{autoFit3D();drawAll();};
+  document.querySelectorAll('[data-layout]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('[data-layout]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); $('viewgrid').className='viewgrid '+(b.dataset.layout==='split'?'':b.dataset.layout); setTimeout(resize,50); });
+
+  function setupPanZoom2D(){ c2.addEventListener('dblclick',()=>{autoFit2D();drawAll();}); c2.addEventListener('mousedown',e=>{view2.dragging=true;view2.last={x:e.clientX,y:e.clientY};}); window.addEventListener('mouseup',()=>{view2.dragging=false;view3.dragging=false;view3.panning=false;}); window.addEventListener('mousemove',e=>{ if(view2.dragging){ view2.ox+=e.clientX-view2.last.x; view2.oy+=e.clientY-view2.last.y; view2.last={x:e.clientX,y:e.clientY}; drawAll(); } if(view3.dragging){ const dx=e.clientX-view3.last.x, dy=e.clientY-view3.last.y; if(view3.panning){view3.ox+=dx;view3.oy+=dy;} else {view3.rotY+=dx*.008; view3.rotX+=dy*.008;} view3.last={x:e.clientX,y:e.clientY}; drawAll(); }}); c2.addEventListener('wheel',e=>{e.preventDefault(); const r=c2.getBoundingClientRect(), mx=e.clientX-r.left,my=e.clientY-r.top; const k=e.deltaY<0?1.12:.89; view2.ox=mx-(mx-view2.ox)*k; view2.oy=my-(my-view2.oy)*k; view2.scale*=k; drawAll();},{passive:false}); }
+  function setup3D(){ c3.addEventListener('contextmenu',e=>e.preventDefault()); c3.addEventListener('dblclick',()=>{autoFit3D();drawAll();}); c3.addEventListener('mousedown',e=>{view3.dragging=true;view3.panning=e.button===2||e.shiftKey;view3.last={x:e.clientX,y:e.clientY};}); c3.addEventListener('wheel',e=>{e.preventDefault(); view3.scale*=e.deltaY<0?1.12:.89; drawAll();},{passive:false}); }
+  setupPanZoom2D(); setup3D();
+
+  function exportPNG(canvas,name){ const a=document.createElement('a'); a.download=name; a.href=canvas.toDataURL('image/png'); a.click(); }
+  $('png2d').onclick=()=>exportPNG(c2,'plan-2d-ifc.png'); $('png3d').onclick=()=>exportPNG(c3,'vue-3d-ifc.png');
+  $('svg2d').onclick=()=>{ if(!model)return; const curves=filteredCurves(); const b=computeBounds(curves.flatMap(c=>c.pts)); const W=1200,H=900,pad=40, sc=Math.min((W-2*pad)/Math.max(1,b.maxX-b.minX),(H-2*pad)/Math.max(1,b.maxY-b.minY)); const path=curves.map(c=>{ const d=c.pts.map((p,i)=>`${i?'L':'M'} ${(p.x-b.minX)*sc+pad} ${H-((p.y-b.minY)*sc+pad)}`).join(' '); return `<path d="${d}" fill="${c.closed?'rgba(255,211,77,0.08)':'none'}" stroke="${c.closed?'#15243d':'#2f7fb8'}" stroke-width="2"/>`; }).join('\n'); const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#f7f8fb"/>${path}</svg>`; const blob=new Blob([svg],{type:'image/svg+xml'}); const a=document.createElement('a'); a.download='plan-2d-ifc.svg'; a.href=URL.createObjectURL(blob); a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
+
+  resize();
+})();
 </script>
 </body>
 </html>
