@@ -24,7 +24,7 @@
   </style>
 
   <!-- Couple stable issu de l'ancien exemple officiel three.js IFC :
-       three 0.150.1 + web-ifc-three 0.0.126 + web-ifc 0.0.36.
+       three 0.150.1 avec adaptateur BufferGeometryUtils + web-ifc-three 0.0.126 + web-ifc 0.0.36.
        Ne pas mélanger avec web-ifc 0.0.44/0.0.77 ici, sinon erreur WASM ABI. -->
   <script type="importmap">
   {
@@ -32,7 +32,8 @@
       "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js",
       "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/",
       "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/",
-      "three/examples/jsm/utils/BufferGeometryUtils": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/utils/BufferGeometryUtils.js",
+      "three/examples/jsm/utils/BufferGeometryUtils": "data:text/javascript;charset=utf-8,import%20%2A%20as%20Utils%20from%20%27https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fthree%400.150.1%2Fexamples%2Fjsm%2Futils%2FBufferGeometryUtils.js%27%3B%0Aexport%20%2A%20from%20%27https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fthree%400.150.1%2Fexamples%2Fjsm%2Futils%2FBufferGeometryUtils.js%27%3B%0Aexport%20const%20mergeGeometries%20%3D%20Utils.mergeGeometries%20%7C%7C%20Utils.mergeBufferGeometries%3B%0A",
+      "three/examples/jsm/utils/BufferGeometryUtils.js": "data:text/javascript;charset=utf-8,import%20%2A%20as%20Utils%20from%20%27https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fthree%400.150.1%2Fexamples%2Fjsm%2Futils%2FBufferGeometryUtils.js%27%3B%0Aexport%20%2A%20from%20%27https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fthree%400.150.1%2Fexamples%2Fjsm%2Futils%2FBufferGeometryUtils.js%27%3B%0Aexport%20const%20mergeGeometries%20%3D%20Utils.mergeGeometries%20%7C%7C%20Utils.mergeBufferGeometries%3B%0A",
       "web-ifc": "https://cdn.jsdelivr.net/npm/web-ifc@0.0.36/web-ifc-api.js",
       "web-ifc-three": "https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.126/IFCLoader.js"
     }
