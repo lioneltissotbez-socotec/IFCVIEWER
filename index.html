@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prototype IFC → plans 2D de sols</title>
+  <title>Prototype IFC → plans 2D de sols - GitHub Pages fix</title>
   <style>
     :root{
       --bg:#0f172a; --panel:#111827; --card:#1f2937; --line:#334155;
@@ -38,6 +38,7 @@
 <body>
   <aside>
     <h1>IFC → plans 2D</h1>
+    <p><strong>Version corrigée GitHub Pages</strong> : web-ifc-viewer est verrouillé en 1.0.216 pour éviter les imports cassés de la 1.0.218.</p>
     <p>Prototype HTML local pour charger un fichier IFC, lire les niveaux et générer une vue de dessus exploitable comme plan de sol.</p>
 
     <div class="drop">
@@ -59,7 +60,7 @@
 
     <h2>Principe du proto</h2>
     <p>
-      Ce fichier utilise IFC.js / web-ifc-viewer dans le navigateur. Pour un vrai export vectoriel propre, l’étape suivante sera de créer une coupe horizontale par niveau puis d’exporter les contours en SVG/DXF.
+      Ce fichier utilise IFC.js / web-ifc-viewer@1.0.216 dans le navigateur. Pour un vrai export vectoriel propre, l’étape suivante sera de créer une coupe horizontale par niveau puis d’exporter les contours en SVG/DXF.
     </p>
   </aside>
 
@@ -70,7 +71,7 @@
 
   <script type="module">
     import { Color, Box3, Vector3 } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
-    import { IfcViewerAPI } from 'https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.218/dist/ifc-viewer-api.js';
+    import { IfcViewerAPI } from 'https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.216/dist/ifc-viewer-api.js';
 
     const container = document.getElementById('viewer');
     const status = document.getElementById('status');
